@@ -10,7 +10,7 @@ class Canvate {
     private _tempCanvas:HTMLCanvasElement;
     private _tempContext:CanvasRenderingContext2D;
     private _drawsList:Array<any>   = []; //TODO Vector
-    private _buttonsList:Object     = {}; //TODO Vector
+    private _buttonsList:any     = {}; //TODO Vector
     private _lastColor:number       = 1;
     private _self:Canvate           = this;
     private _fillStyle:string|CanvasPattern = "#0"; // TODO image pattern type
@@ -36,6 +36,7 @@ class Canvate {
     private _lastShapeDown:any; //TODO
     private _updateCallback:Function;
 
+    // ::: C O N S T R U C T O R::: //
     constructor (width:number, height:number, element?:HTMLCanvasElement, canvasDebugger?:HTMLElement){
         console.log("Canvate is Alive!");
         
@@ -63,6 +64,42 @@ class Canvate {
         this._tempContext   = <CanvasRenderingContext2D>this._tempCanvas.getContext("2d");
     }
 
+    // ::: INTERFACE CANVATE BACKGROUND　::: //
+    set backgroundColor (color:string) {
+        this._fillStyle = color;
+    }
+
+    set backgroundImage (image:HTMLImageElement|HTMLVideoElement|HTMLCanvasElement){
+        this._fillStyle = this._context.createPattern(image, 'repeat');
+    }
+
+    set fillStyle (fill:string|CanvasPattern){
+        this._fillStyle = fill;
+    }
+
+    get fillStyle ():string|CanvasPattern{
+        return this._fillStyle;
+    }
+    
+    set backgroundAlpha (alpha:number) {
+        this._alphaBackground = isNaN(alpha) ? this._alphaBackground : alpha;
+    }
+
+    get backgroundAlpha ():number {
+        return this._alphaBackground;
+    }
+
+    public loadImageBackground (url:string){
+        let img:HTMLImageElement;
+        //TODO replace by Image loader
+        img        = new Image();
+        img.onload = ():void => {
+                                    this._fillStyle = this._context.createPattern(img, 'repeat');
+                                };
+        img.src    = url;
+    }
+
+    // ::: Initialization ::: //
     private initialize () {
         this._canvasButtons        = <HTMLCanvasElement>this._canvas.cloneNode();
         this._canvasButtons.width  = this._canvas.width;
@@ -90,6 +127,7 @@ class Canvate {
         update();
     }
 
+    // ::: Renderization ::: //
     private fallbackEnterFrame (callback:Function, element:HTMLElement):number {
         let currTime = Date.now();
         let timeToCall = Math.max(0, 16 - (currTime - this._lastTime));
@@ -116,43 +154,51 @@ class Canvate {
         this._contextOff.restore();
     }
 
-    // ::: INTERFACE CANVATE BACKGROUND::: //
-     set backgroundColor (color:string) {
-        this._fillStyle = color;
-    }
-
-    set backgroundImage (image:HTMLImageElement|HTMLVideoElement|HTMLCanvasElement){
-        this._fillStyle = this._context.createPattern(image, 'repeat');
-    }
-
-    public loadImageBackground (url:string){
-        let img:HTMLImageElement;
-        //TODO replace by Image loader
-        img        = new Image();
-        img.onload = ():void => {
-                                    this._fillStyle = this._context.createPattern(img, 'repeat');
-                                };
-        img.src    = url;
-    }
-
-    set fillStyle (fill:string|CanvasPattern){
-        this._fillStyle = fill;
-    }
-
-    get fillStyle ():string|CanvasPattern{
-        return this._fillStyle;
+    private update(){
+		if(Boolean(this._updateCallback)){
+			_updateCallback();
+		}
+		
+		_canvas.width         = _width;
+		_canvas.height        = _height;
+		_canvasButtons.width  = _width;
+		_canvasButtons.height = _height;
+		_canvasOff.width      = _width;
+		_canvasOff.height     = _height;
+		
+		
+		_displayBackground();
+		var data;
+		var command;
+		var argumentList;
+		var length = _drawsList.length;
+		for(var index=0; index < length; index++){
+			data         = _drawsList[index];
+			command      = data.command;
+			argumentList = data.argumentList;
+			try {
+				command.apply(this, argumentList);
+			}catch(error){
+				// console.log("The command is undefined");
+			}
+		}
+		
+		resolveOver();
+		
+		_context.drawImage(_canvasOff, 0, 0);
+		//displayGrid();
+		requestAnimationFrame(update);
     }
     
-    set backgroundAlpha (alpha:number) {
-        this._alphaBackground = isNaN(alpha) ? this._alphaBackground : alpha;
-    }
-
-    get backgroundAlpha ():number {
-        return this._alphaBackground;
-    }
-
+    // ::: Mouse event ::: //
     private addEventListeners():void {
+        this._canvas.onmousemove    = this.onMouseMove;
+        this._canvas.onclick        = this.onClick;
+        this._canvas.onmousedown    = this.onMouseDown;
+        this._canvas.onmouseup      = this.onMouseUp;
+        this._canvas.onmouseleave   = this.onMouseLeave;
         
+        document.onmouseout         = this.onMouseLeave;
     }
 
     private onMouseMove(event:MouseEvent){
@@ -160,84 +206,94 @@ class Canvate {
         this._bounds = this._canvas.getBoundingClientRect();
         let mouseX   = event.clientX;
         let mouseY   = event.clientY;
-        this._lastX  = (mouseX - _bounds.left) * (this._canvas.width/this._bounds.width);
-        this._lastY  = (mouseY - _bounds.top)  * (this._canvas.height/this._bounds.height);
+        this._lastX  = (mouseX - this._bounds.left) * (this._canvas.width/this._bounds.width);
+        this._lastY  = (mouseY - this._bounds.top)  * (this._canvas.height/this._bounds.height);
         
         this._mouseX = mouseX;
         this._mouseY = mouseY;
 
-        resolveOver();
+        this.resolveOver();
     };
-        /*
-        _canvas.onclick = function(event){
-            event.preventDefault();
-            var shape =  _buttonsList[_pixelColor];
-            if(Boolean(shape) && typeof(shape.onClick) != "undefined"){
-                shape.onClick(_lastX, _lastY);   
-            }
-        };
         
-        _canvas.onmousedown = function(event){
-            event.preventDefault();
-            var shape =  _buttonsList[_pixelColor];
-            if(Boolean(shape) && typeof(shape.onClickOutSide) != "undefined"){
-                _lastShapeDown = shape;  
-            }else{
-                _lastShapeDown = null; 
-            }
-        };
-        
-        _canvas.onmouseup = function(event){
-            event.preventDefault();
-            if(Boolean(_lastShapeDown)){
-                _lastShapeDown.onClickOutSide(_lastX, _lastY);
-                _lastShapeDown = null;
-            }
-        };
-        
-        document.onmouseleave = function(event){
-            resolveOut();
-        };
-        */
-
-        private resolveOver(){
-            var isNotOver = undefined == this._lastX || 
-                            undefined == this._lastY || 
-                            this._lastShapeDown      != null;
-            if(isNotOver){
-                //Early return
-                return;
-            }
-            
-            let pixel       = this._contextButtons.getImageData(this._lastX, this._lastY, 1, 1).data;
-            let hex         = ((pixel[0] << 16) | (pixel[1] << 8) | pixel[2]).toString(16).toUpperCase();
-            let pixelColor  = this._pixelColor    = "#" + ("000000" + hex).slice(-6);
-            
-            let shape       =  this._buttonsList[this._pixelColor];
-            var mouseCursor = "default";
-            
-            if(Boolean(shape)){
-                var hasOver      = typeof(shape.onOver) != "undefined";
-                var hasMouse     = hasOver || typeof(shape.onClick) != "undefined" || typeof(shape.onOut) != "undefined" || typeof(shape.onClickOutSide) != "undefined";
-                if(hasMouse){
-                    mouseCursor = "pointer";
-                }
-                
-                 if(shape != _lastShapeOvered){
-                    resolveOut();
-                    _lastShapeOvered = shape;
-                    
-                    if(hasOver){
-                        shape.onOver(_lastX, _lastY);
-                    }
-                 }
-            }else {
-                resolveOut();
-            }
-            
-            _canvas.style.cursor = mouseCursor;
+    private onClick (event:MouseEvent){
+        event.preventDefault();
+        var shape:any =  <any> this._buttonsList[this._pixelColor];
+        if(Boolean(shape) && typeof(shape.onClick) != "undefined"){
+            shape.onClick(this._lastX, this._lastY);   
         }
+    };
+        
+    private onMouseDown (event:MouseEvent){
+        event.preventDefault();
+        var shape:any =  this._buttonsList[this._pixelColor];
+        if(Boolean(shape) && typeof(shape.onClickOutSide) != "undefined"){
+            this._lastShapeDown = shape;  
+        }else{
+            this._lastShapeDown = null; 
+        }
+    };
 
+    private onMouseUp (event:MouseEvent){
+        event.preventDefault();
+        if(Boolean(this._lastShapeDown)){
+            this._lastShapeDown.onClickOutSide(this._lastX, this._lastY);
+            this._lastShapeDown = null;
+        }
+    };
+        
+    private onMouseLeave (event:MouseEvent){
+        this.resolveOut();
+    };
+
+    private resolveOver(){
+        var isNotOver = undefined == this._lastX || 
+                        undefined == this._lastY || 
+                        this._lastShapeDown      != null;
+        if(isNotOver){
+            //Early return
+            return;
+        }
+        
+        let pixel       = this._contextButtons.getImageData(this._lastX, this._lastY, 1, 1).data;
+        let hex         = ((pixel[0] << 16) | (pixel[1] << 8) | pixel[2]).toString(16).toUpperCase();
+        let pixelColor  = this._pixelColor    = "#" + ("000000" + hex).slice(-6);
+        
+        let shape       =  this._buttonsList[this._pixelColor];
+        var mouseCursor = "default";
+        
+        if(Boolean(shape)){
+            var hasOver      = typeof(shape.onOver) != "undefined";
+            var hasMouse     = hasOver || typeof(shape.onClick) != "undefined" || typeof(shape.onOut) != "undefined" || typeof(shape.onClickOutSide) != "undefined";
+            if(hasMouse){
+                mouseCursor = "pointer";
+            }
+            
+                if(shape != this._lastShapeOvered){
+                this.resolveOut();
+                this._lastShapeOvered = shape;
+                
+                if(hasOver){
+                    shape.onOver(this._lastX, this._lastY);
+                }
+                }
+        }else {
+            this.resolveOut();
+        }
+        
+        this._canvas.style.cursor = mouseCursor;
+    }
+
+    private resolveOut(){
+        if(this._lastShapeDown != undefined){
+            return;
+        }
+        if(Boolean(this._lastShapeOvered)){
+            if(typeof(this._lastShapeOvered.onOut) != "undefined"){
+                this._lastShapeOvered.onOut(this._lastX, this._lastY);
+                this._lastShapeOvered = null;
+            }
+        }
+    }
 }
 
 var canvas:Canvate = new Canvate(900, 1250);
