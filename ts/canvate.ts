@@ -12,7 +12,7 @@ class Canvate {
     private _buttonsList:Object     = {}; //TODO Vector
     private _lastColor:number       = 1;
     private _self:Canvate           = this;
-    private _fillStyle:number|string|any = "#0"; // TODO image pattern type
+    private _fillStyle:string|CanvasPattern = "#0"; // TODO image pattern type
     private _alphaBackground:number = 1;
     private _maskTypes:any          = { //TODO
                                          mask  : 'destination-in'
@@ -107,92 +107,56 @@ class Canvate {
     };
 
     private displayBackground(){
-		_contextOff.save();
-		
-		_contextOff.globalAlpha   = _alphaBackground;
-		_contextOff.fillStyle     = _colorBackground;
-		_contextOff.fillRect(0, 0, _canvas.width, _canvas.height);
-		
-		_contextButtons.fillStyle = "#000000";
-		_contextButtons.fillRect(0, 0, _canvas.width, _canvas.height);
-		
-		_contextOff.restore();
-	}
+        this._contextOff.save();
+        
+        this._contextOff.globalAlpha   = this._alphaBackground;
+        this._contextOff.fillStyle     = this._fillStyle;
+        
+        let width  = this._canvas.width;
+        let height = this._canvas.height;
+
+        this._contextOff.fillRect(0, 0, width, height);
+        
+        this._contextButtons.fillStyle = "#000000";
+        this._contextButtons.fillRect(0, 0, width, height);
+        
+        this._contextOff.restore();
+    }
 
     // ::: INTERFACE CANVATE BACKGROUND::: //
-     set backgroundColor (color:number|string):void{
-        this._colorBackground = color;
-        _displayBackground = _setColorBackground;
+     set backgroundColor (color:string) {
+        this._fillStyle = color;
     }
-    get backgroundColor ():number|string{
-        return this._colorBackground;
+
+    set backgroundImage (image:HTMLImageElement|HTMLVideoElement|HTMLCanvasElement){
+        this._fillStyle = this._context.createPattern(image, 'repeat');
+    }
+
+    public loadImageBackground (url:string){
+        let img:HTMLImageElement;
+        //TODO replace by Image loader
+        img        = new Image();
+        img.onload = ():void => {
+                                    this._fillStyle = this._context.createPattern(img, 'repeat');
+                                };
+        img.src    = url;
+    }
+
+    set fillStyle (fill:string|CanvasPattern){
+        this._fillStyle = fill;
+    }
+
+    get fillStyle ():string|CanvasPattern{
+        return this._fillStyle;
     }
     
-    set backgroundAlpha (alpha:number):void {
+    set backgroundAlpha (alpha:number) {
         this._alphaBackground = isNaN(alpha) ? this._alphaBackground : alpha;
     }
+
     get backgroundAlpha ():number {
         return this._alphaBackground;
     }
-    
-    set backgroundImage (image):void {
-        this._backgroundImagePattern = this._context.createPattern(image, 'repeat');
-        this._displayBackground      = this._setImageBackground;
-    }
-    get backgroundImage ():number {
-        return this._alphaBackground;
-    }
-	this.setImageBackground = function (image, alpha){
-		_alphaBackground        = isNaN(alpha) ? _alphaBackground : alpha;
-		_backgroundImagePattern = _context.createPattern(image, 'repeat');
-		_displayBackground      = _setImageBackground;
-	}
-	
-	this.loadImageBackground = function (url, alpha){
-		_alphaBackground  = isNaN(alpha) ? _alphaBackground : alpha;
-		
-		var img;
-		
-		onload = function() {
-			imagesLoaded[url]       = img;
-			_backgroundImagePattern = _context.createPattern(img, 'repeat');
-			_displayBackground      = _setImageBackground;
-		};
-		
-		if(null == img){
-			img        = new Image();
-			img.onload = onload;
-			img.src    = url;
-		}else{
-			onload();
-		}
-	}
-	
-	function _setImageBackground(){
-		_contextOff.save();
-		
-			_contextOff.globalAlpha   = _alphaBackground;
-			_contextOff.fillStyle     = _backgroundImagePattern;
-			_contextOff.fillRect(0, 0, _canvas.width, _canvas.height);
-			
-			_contextButtons.fillStyle = "#000000";
-			_contextButtons.fillRect(0, 0, _canvas.width, _canvas.height);
-		
-		_contextOff.restore();
-	}
-	
-	function _setColorBackground(){
-		_contextOff.save();
-		
-		_contextOff.globalAlpha   = _alphaBackground;
-		_contextOff.fillStyle     = _colorBackground;
-		_contextOff.fillRect(0, 0, _canvas.width, _canvas.height);
-		
-		_contextButtons.fillStyle = "#000000";
-		_contextButtons.fillRect(0, 0, _canvas.width, _canvas.height);
-		
-		_contextOff.restore();
-	}
 
     private addEventListeners():void {
         
