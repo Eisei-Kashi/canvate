@@ -2,6 +2,7 @@ class Canvate {
     // ::: PROPERTIES MEMBER ::: //
     private _lastTime = 0;
     private _enterFrame:Function;
+    private _cancelEnterFrame:Function;
     private _width:number;
     private _height:number;
     private _canvas:HTMLCanvasElement;
@@ -37,25 +38,21 @@ class Canvate {
 
     constructor (width:number, height:number, element?:HTMLCanvasElement, canvasDebugger?:HTMLElement){
         console.log("Canvate is Alive!");
-        /*
+        
+        this._enterFrame       = this.fallbackEnterFrame;
+        this._cancelEnterFrame = (id:number) => {
+                                                    clearTimeout(id);
+                                                }
+        
         let vendors  = ['ms', 'moz', 'webkit', 'o'];
         
-        for(let x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-            this._enterFrame = window[vendors[x]+'RequestAnimationFrame'];
-            window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame'] 
-                                       || window[vendors[x]+'CancelRequestAnimationFrame'];
+        for(let index = 0; index < vendors.length && !window.requestAnimationFrame; ++index) {
+            this._enterFrame       = <Function> window [vendors[index]+'RequestAnimationFrame'];
+
+            this._cancelEnterFrame = <Function> window [vendors[index]+'CancelAnimationFrame'] || 
+                                                window [vendors[index]+'CancelRequestAnimationFrame'];
         }
-    
-        if (!this._enterFrame){
-            this._enterFrame = this.fallback;
-        }
-    
-        if (!window.cancelAnimationFrame){
-            window.cancelAnimationFrame = function(id) {
-                clearTimeout(id);
-            }
-        }
-        */
+        
         this._width         = width;
         this._height        = height;
         
@@ -64,8 +61,6 @@ class Canvate {
 
         this._tempCanvas    = document.createElement("canvas");
         this._tempContext   = <CanvasRenderingContext2D>this._tempCanvas.getContext("2d");
-        
-        this._enterFrame    = this.fallback;
     }
 
     private initialize () {
@@ -91,13 +86,11 @@ class Canvate {
         let id = "#" + this._canvas.id;
 
         this.addEventListeners();
-        
-        this._displayBackground = this._setColorBackground;
 
         update();
     }
 
-    private fallback (callback:Function, element:HTMLElement):number {
+    private fallbackEnterFrame (callback:Function, element:HTMLElement):number {
         let currTime = Date.now();
         let timeToCall = Math.max(0, 16 - (currTime - this._lastTime));
         let id = window.setTimeout(function() { callback(currTime + timeToCall); }, 
