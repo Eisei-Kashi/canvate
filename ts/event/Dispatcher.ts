@@ -1,48 +1,14 @@
-export class AppEvent extends Event{
-    private _type:string;
-    private _data:any;
+import { IDispatcher } from "./IDispatcher";
+import { AppEvent }    from "./AppEvent";
 
-    constructor(type:string, data?:any) {
-        
-        if(null == type){
-            throw new Error("The type property must be different from 0");
-        }
-        
-        if(type.length == 0){
-            throw new Error("The type property must be a String with a length greater than 0");
-        }
-
-        super(type);
-        
-        this._type = type;
-        this._data = data;
-    }
-
-    get type ():string {
-        return this._type;
-    }
-
-    get target ():any {
-        return this._data
-    }
-
-    public clone ():AppEvent {
-        return new AppEvent(this._type, this._data);
-    }
-}
-
-export interface IDispatcher{
-    addEventListener(type:string, listener:Function):Boolean;
-    removeEventListener(type:string, listener:Function):Boolean;
-}
-
-interface EventsListenersList {
-    [key: string]: Function[];
+interface IKeyFunction {
+    [key: string]:Function[];
 }
 
 export class Dispatcher implements IDispatcher{
+
     private _target:IDispatcher;
-    private _eventsListenerList:EventsListenersList = {};
+    private _eventsListenerList:IKeyFunction = {};
 
     constructor (target:IDispatcher){
         this._target = target;

@@ -1,304 +1,10 @@
-
-import { IDispatcher } from "../../event/Dispatcher";
 import { Dispatcher }  from "../../event/Dispatcher";
+import { MOUSE_TYPES } from "../../event/MOUSE_TYPES"
+import { IKeyValue }   from "../../utils/IKeyValue";
+import { Shape }       from "./Shape";
 
 module com.kaizenjs.Canvate {
-    //add child and button creation in the mouse event listener setter
-
-    class Box {
-        protected _x:number       = 0;
-        protected _y:number       = 0;
-        protected _width:number   = 0;
-        protected _height:number  = 0
-
-        constructor (x:number=0, y:number=0, width:number=0, height:number=0){
-            this._x         = x;
-            this._y         = y;
-            this._width     = width;
-            this._height    = height;
-        }
-
-        set x (num:number) {
-            this._x = num;
-        }
-        get x (){
-            return this._x;
-        }
-
-        set y (num:number) {
-            this._y = num;
-        }
-
-        get y (){
-            return this._y;
-        }
-
-        set width (num:number) {
-            this._width = num;
-        }
-        get width (){
-            return this._width;
-        }
-
-        set height (num:number) {
-            this._height = num;
-        }
-        get height (){
-            return this._height;
-        }
-    }
-
-    class CanvateMediator implements IDispatcher {
-        private _dispatcher = new Dispatcher(this);
-
-        public addEventListener(type:string, listener:Function):Boolean {
-            let wasAdded:Boolean     = this._dispatcher.addEventListener(type, listener);
-            return wasAdded;
-        }
-
-        public removeEventListener(type:string, listener:Function):Boolean {
-            let wasRemoved:Boolean   = this._dispatcher.removeEventListener(type, listener);
-            return wasRemoved;
-        }
-
-        public dispatch (type:string, colorButton:string):void {
-            this._dispatcher.dispatchByType(type, colorButton);
-        }
-    }
-
-    let canvateMediator:CanvateMediator = new CanvateMediator();
-
-    const enum types {
-        Shape
-        , Rectangle
-        , Circle
-        , Bitmap
-        , Clip
-    }
-
-    interface IKeyValue {
-        [key: string]: string;
-    }
-
-    const mouseEventTypes:IKeyValue = {
-        CLICK : "click"
-        , OVER  : "mouseover"
-        , OUT   : "mouseout"
-        , MOVE  : "mousemove"
-        , DOWN  : "mousedown"
-        , UP    : "mouseup"
-        , ENTER : "mouseenter"
-        , LEAVE : "mouseleave"
-    }
-
     let idCounter:number = 0;
-
-    export class Shape extends Box implements IDispatcher{
-        protected _mouseEventCounter:number = 0;
-        protected _dispatcher:Dispatcher;
-        protected _id:number;
-        protected _type:number     = types.Shape;
-
-        protected _visible:Boolean = true;
-
-        protected _scaleX:number   = 1;
-        protected _scaleY:number   = 1;
-        protected _pivotX:number   = 0;
-        protected _pivotY:number   = 0;
-        protected _rotation:number = 0;
-        protected _alpha:number    = 1;
-
-        protected _color:number|string = 0;
-        protected _buttonColor:string;
-
-        constructor(x:number=0, y:number=0, width:number=0, height:number=0){
-            super(x, y, width, height);
-            this._dispatcher = new Dispatcher(this);
-            this._id          = ++idCounter;
-            this._buttonColor = "#" + ("000000" + this._id.toString(16).toUpperCase()).slice(-6);
-        }
-
-        // id
-        get id():number {
-            return this._id;
-        }
-
-        // type
-        get type():number {
-            return this._type;
-        }
-
-        // visible
-        set visible (bool:Boolean){
-            this._visible = bool;
-        }
-
-        get visible (){
-            return this._visible;
-        }
-
-        // scaleX
-        set scaleX (num:number){
-            this._scaleX = num;
-        }
-
-        get scaleX (){
-            return this._scaleX;
-        }
-
-        // scaleY
-        set scaleY (num:number){
-            this._scaleX = num;
-        }
-
-        get scaleY (){
-            return this._scaleY;
-        }
-
-        // pivotX
-        set pivotX (num:number){
-            this._pivotX = num;
-        }
-
-        get pivotX (){
-            return this._pivotX;
-        }
-
-        // pivotY
-        set pivotY (num:number){
-            this._pivotY = num;
-        }
-
-        get pivotY (){
-            return this._pivotX;
-        }
-
-        // rotation
-        set rotation (num:number){
-            this._rotation = num;
-        }
-
-        get rotation (){
-            return this._rotation;
-        }
-
-        // alpha
-        set alpha (num:number){
-            this._alpha = num;
-        }
-
-        get alpha (){
-            return this._alpha;
-        }
-
-        // color
-        set color (col:number|string){
-            this._color = col;
-        }
-
-        get color ():number|string{
-            return this._color;
-        }
-
-        get buttonColor ():string {
-            return this._buttonColor;
-        }
-
-        get hasButtonListener ():Boolean {
-            return 0 < this._mouseEventCounter;
-        }
-
-        get canvasSet ():CanvasSet{
-
-        }
-
-        // ::: Interface Event dispatcher ::: //
-        public addEventListener(type:string, listener:Function):Boolean {
-            let wasAdded:Boolean     = this._dispatcher.addEventListener(type, listener);
-            let isMouseEvent:Boolean = null != mouseEventTypes[type];
-            if(wasAdded && isMouseEvent){
-                this._mouseEventCounter++;
-            }
-            return wasAdded;
-        }
-
-        public removeEventListener(type:string, listener:Function):Boolean {
-            let wasRemoved:Boolean   = this._dispatcher.removeEventListener(type, listener);
-            let isMouseEvent:Boolean = null != mouseEventTypes[type];
-            if(wasRemoved && isMouseEvent){
-                this._mouseEventCounter--;
-            }
-            return wasRemoved;
-        }
-    }
-
-    export class Rectangle extends Shape {
-        private _canvas:HTMLCanvasElement;
-        private _buttonCanvas:HTMLCanvasElement;
-
-        constructor(width:number=0, height:number=0){
-            super(0, 0, width, height);
-            this._type = types.Rectangle;
-        }
-
-        get canvas ():HTMLCanvasElement{
-            if(null == this._canvas){
-                this._canvas         = document.createElement('canvas');
-                this._canvas.width   = this._width  + 1;
-                this._canvas.height  = this._height + 1;
-                
-                let context:CanvasRenderingContext2D = <CanvasRenderingContext2D>this._canvas.getContext('2d');
-                    context.fillStyle   = <string | CanvasPattern>this._color;
-                    context.fillRect(this._x, this._y, this._width, this._height);
-                    context.fill();
-            }
-
-            return this._canvas;
-        }
-
-        get buttonCanvas ():HTMLCanvasElement {
-            if(null == this._buttonCanvas){
-                this._buttonCanvas = document.createElement('canvas');
-                this._buttonCanvas.width  = this._width;
-                this._buttonCanvas.height = this._height;
-                
-                let buttonContext:CanvasRenderingContext2D = <CanvasRenderingContext2D>this._buttonCanvas.getContext('2d');
-                    buttonContext.fillStyle = this.buttonColor;
-                    buttonContext.fillRect(this._x, this._y, this._width, this._height);
-                    buttonContext.fill();
-            }
-            
-            return this._buttonCanvas;
-        }
-    }
-
-    export class Circle extends Shape {
-        constructor(diameter:number){
-            super(0, 0, diameter, diameter);
-            this._type = types.Circle;
-        }
-    }
-
-    export class Bitmap extends Rectangle {
-        protected _crop:Box = new Box();
-
-        constructor(image:ImageBitmap, crop?:Box){
-            super(0, 0);
-            this._type = types.Bitmap;
-            if(null != crop){
-                this._crop   = crop;
-            }
-
-            this._width  = this._crop.width;
-            this._height = this._crop.height;
-        }
-    }
-
-    export class Clip extends Bitmap {
-        constructor(image:ImageBitmap, crop?:Box){
-            super(image, crop);
-        }
-    }
 
     export class Canvate {
         // ::: PROPERTIES MEMBER ::: //
@@ -332,7 +38,7 @@ module com.kaizenjs.Canvate {
         private _mouseY:number;
         private _bounds:DOMRectInit;
         private _lastShapeOvered:Shape;
-        private _lastShapeDown:Shape;
+        private _lastShapeDown:Shape|null;
         private _updateCallback:Function;
 
         // ::: C O N S T R U C T O R::: //
@@ -399,64 +105,20 @@ module com.kaizenjs.Canvate {
         }
 
         // ::: SHAPES INTERFACE ::: //
-        public addChild(child:Rectangle|Circle|Bitmap|Clip|HTMLCanvasElement){
-            if(child instanceof HTMLCanvasElement){
-                //TODO add canvas
-            }else{
-                var type = child.type;
-                switch(type){
-                    case types.Bitmap :
-                    break;
-                    case types.Circle :
-                    break;
-                    case types.Clip :
-                    break;
-                    case types.Rectangle :
-                    break;
-                    case types.Shape :
-                    break;
+        public addChild(child:Shape):Boolean{
+            var length:number = this._drawsList.length;
+            for(let index:number = 0; index < length; index++){
+                if(child == this._drawsList[index]){
+                    // Early return
+                    return false;
                 }
             }
-        }
-
-        this.drawRectangle = function (data){
-            var x      = data.x;
-            var y      = data.y;
-            var width  = data.width;
-            var height = data.height;
-            var color  = data.color;
-            var alpha  = data.alpha;
-            
-            var shape               = {x:x, y:y, width:width, height:height, color:color, alpha:alpha};
-            setImageArguments(shape);
-            var key                 = setButton(shape);
-        
-            var canvas              = document.createElement('canvas');
-                canvas.width        = width+1;
-                canvas.height       = height+1;
-                
-            var context             = canvas.getContext('2d');
-                context.fillStyle   = color;
-                context.fillRect(x, y, width, height);
-                context.fill();
-                shape.canvas        = canvas;
-            
-            var buttonCanvas        = document.createElement('canvas');
-                buttonCanvas.width  = width;
-                buttonCanvas.height = height;
-                
-            var buttonContext       = buttonCanvas.getContext('2d');
-                buttonContext.fillStyle   = key;
-                context.fillRect(x, y, width, height);
-                buttonContext.fill();
-                
-        var argumentsList = [shape, buttonCanvas, width, height];
-        _addCommand(_drawCanvas, argumentsList);
-        return shape;
+            this._drawsList.push(child);
+            return true;
         }
 
         // ::: Render interface ::: //
-        public function clear ():void {
+        public clear ():void {
             //TODO CLEAR ALL DEPENDENCIES
             this._drawsList.length = 0;
         }
@@ -576,8 +238,8 @@ module com.kaizenjs.Canvate {
             this._bounds = this._canvas.getBoundingClientRect();
             let mouseX   = event.clientX;
             let mouseY   = event.clientY;
-            this._lastX  = (mouseX - this._bounds.left) * (this._canvas.width/this._bounds.width);
-            this._lastY  = (mouseY - this._bounds.top)  * (this._canvas.height/this._bounds.height);
+            this._lastX  = (mouseX - this._bounds.x) * (this._canvas.width/this._bounds.width);
+            this._lastY  = (mouseY - this._bounds.y)  * (this._canvas.height/this._bounds.height);
             
             this._mouseX = mouseX;
             this._mouseY = mouseY;
