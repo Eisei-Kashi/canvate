@@ -1,20 +1,29 @@
-import { Box } from "./Box";
+import { Box }              from "./Box";
+import { MOUSE_TYPES }      from "../../event/MOUSE_TYPES";
+import { CANVATE_MEDIATOR } from "../../event/Mediator";
+import { Dispatcher }       from "../../event/Dispatcher";
+import { IDispatcher }      from "../../event/IDispatcher";
+import { CanvateEvent }     from "../../event/CanvateEvent";
+
+export interface IStringShape {
+    [key: string]: Shape;
+}
 
 export class Shape extends Box implements IDispatcher{
     protected _canvas:HTMLCanvasElement;
-    protected _context:CanvasRenderingContext2D;
-    
     protected _buttonCanvas:HTMLCanvasElement;
+
+    protected _context:CanvasRenderingContext2D;
     protected _buttonContext:CanvasRenderingContext2D;
 
-    protected _mouseEventCounter:number = 0;
     protected _dispatcher:Dispatcher;
-    protected _id:number;
-
-    protected _visible:Boolean = true;
     
-    protected _crop:Box;
+    protected _color:CanvasPattern|string = "black";
+    
+    protected _buttonColor:string;
 
+    protected _mouseEventCounter:number = 0;
+    protected _id:number;
     protected _scaleX:number   = 1;
     protected _scaleY:number   = 1;
     protected _pivotX:number   = 0;
@@ -22,35 +31,22 @@ export class Shape extends Box implements IDispatcher{
     protected _rotation:number = 0;
     protected _alpha:number    = 1;
 
-    protected _color:CanvasPattern|string = "black";
-    protected _buttonColor:string;
-
+    protected _visible:Boolean    = true;
     protected _hasChanged:Boolean = false;
+    protected _hasOver:Boolean    = false;
+    protected _hasOut:Boolean     = false;
+    protected _hasEnter:Boolean   = false;
 
-    constructor(x:number=0, y:number=0, width:number=0, height:number=0){
+    protected _crop:Box;
+
+    constructor(x?:number=0, y?:number=0, width?:number=0, height?:number=0){
         super(x, y, width, height);
-
-        this._crop          = new Box(x, y, width, height);
-        
-        this._dispatcher    = new Dispatcher(this);
-        this._id            = ++idCounter;
-        this._buttonColor   = "#" + ("000000" + this._id.toString(16).toUpperCase()).slice(-6);
-
-        this._canvas        = document.createElement('canvas');
-        this._context       = <CanvasRenderingContext2D>this._canvas.getContext('2d');
-        
-        this._buttonCanvas  = document.createElement('canvas');
-        this._buttonContext = <CanvasRenderingContext2D>this._buttonCanvas.getContext('2d');
+        this._crop = new Box(x, y, width, height);
     }
 
     // id
     get id():number {
         return this._id;
-    }
-
-    // type
-    get type():number {
-        return this._type;
     }
 
     // visible
@@ -103,7 +99,7 @@ export class Shape extends Box implements IDispatcher{
     }
 
     // crop object
-    set crop(box:Box):void{
+    set crop (box:Box){
         this._hasChanged = this._crop != box;
         this._crop = box;
 
@@ -113,12 +109,12 @@ export class Shape extends Box implements IDispatcher{
         this.height = box.height;
     }
 
-    get crop():Box{
+    get crop ():Box{
         return this._crop;
     }
 
     // crop X
-    set cropX(num:number):Box{
+    set cropX (num:number){
         this._hasChanged = this._crop.x != num;
         this._crop.x = num;
     }
@@ -128,32 +124,32 @@ export class Shape extends Box implements IDispatcher{
     }
 
     // crop Y
-    set cropY(num:number):Box{
+    set cropY (num:number){
         this._hasChanged = this._crop.y != num;
         this._crop.y = num;
     }
 
-    get cropY():number{
+    get cropY ():number{
         return this._crop.y;
     }
 
     // crop width
-    set cropWidth(num:number):Box{
+    set cropWidth (num:number){
         this._hasChanged = this._crop.width != num;
         this._crop.width = num;
     }
 
-    get cropWidth():number{
+    get cropWidth ():number{
         return this._crop.width;
     }
 
     // crop height
-    set cropHeight(num:number):Box{
+    set cropHeight (num:number){
         this._hasChanged = this._crop.height != num;
         this._crop.height = num;
     }
 
-    get cropHeight():number{
+    get cropHeight ():number{
         return this._crop.height;
     }
 
@@ -197,8 +193,45 @@ export class Shape extends Box implements IDispatcher{
         return 0 < this._mouseEventCounter;
     }
 
+    get hasOver ():Boolean{
+        return this._hasOver;
+    }
+
+    get hasEnter ():Boolean{
+        return this._hasEnter;
+    }
+
+    get hasOut ():Boolean{
+        return this._hasOut;
+    }
+
+    public doOnClick (mouseX:number, mouseY:number):void {
+        var data:Object = {id:this.id, mouseX:mouseX, mouseY:mouseY};
+        this._dispatcher.dispatchByType(MOUSE_TYPES.CLICK, data);
+    }
+
+    public doOnMouseDown (mouseX:number, mouseY:number):void {
+        var data:Object = {id:this.id, mouseX:mouseX, mouseY:mouseY};
+        this._dispatcher.dispatchByType(MOUSE_TYPES.DOWN, data);
+    }
+
+    public doOnMouseUp (mouseX:number, mouseY:number):void {
+        var data:Object = {id:this.id, mouseX:mouseX, mouseY:mouseY};
+        this._dispatcher.dispatchByType(MOUSE_TYPES.UP, data);
+    }
+
+    public doOnMouseOver (mouseX:number, mouseY:number):void {
+        var data:Object = {id:this.id, mouseX:mouseX, mouseY:mouseY};
+        this._dispatcher.dispatchByType(MOUSE_TYPES.OVER, data);
+    }
+
+    public doOnMouseOut (mouseX:number, mouseY:number):void {
+        var data:Object = {id:this.id, mouseX:mouseX, mouseY:mouseY};
+        this._dispatcher.dispatchByType(MOUSE_TYPES.OUT, data);
+    }
+    
     // ::: Render ::: //
-    public renderOnTarget(context:CanvasRenderingContext2D, buttonContext:CanvasRenderingContext2D){
+    public renderOnTarget (context:CanvasRenderingContext2D, buttonContext:CanvasRenderingContext2D){
         if(this._hasChanged){
             this.draw();
             this._hasChanged = false
@@ -253,23 +286,54 @@ export class Shape extends Box implements IDispatcher{
     }
 
     // ::: Interface Event dispatcher ::: //
-    public addEventListener(type:string, listener:Function):Boolean {
+    public addEventListener (type:string, listener:Function):Boolean {
         let wasAdded:Boolean     = this._dispatcher.addEventListener(type, listener);
-        let isMouseEvent:Boolean = null != mouseEventTypes[type];
+        let isMouseEvent:Boolean = null != MOUSE_TYPES[type];
         if(wasAdded && isMouseEvent){
             this._mouseEventCounter++;
+
+            if(MOUSE_TYPES.OVER == type){
+                this._hasOver = true;
+            }
+
+            if(MOUSE_TYPES.ENTER == type){
+                this._hasEnter = true;
+            }
         }
         return wasAdded;
     }
 
-    public removeEventListener(type:string, listener:Function):Boolean {
+    public removeEventListener (type:string, listener:Function):Boolean {
         let wasRemoved:Boolean   = this._dispatcher.removeEventListener(type, listener);
         let isMouseEvent:Boolean = null != mouseEventTypes[type];
         if(wasRemoved && isMouseEvent){
             this._mouseEventCounter--;
+            
+            if(MOUSE_TYPES.OVER == type){
+                this._hasOver = false;
+            }
+            
+            if(MOUSE_TYPES.ENTER == type){
+                this._hasEnter = false;
+            }
         }
         return wasRemoved;
     }
 
-    protected draw(){};
+    protected initialize (){
+        this._dispatcher    = new Dispatcher(this);
+        this._id            = ++idCounter;
+        this._buttonColor   = "#" + ("000000" + this._id.toString(16).toUpperCase()).slice(-6);
+
+        this._canvas        = document.createElement('canvas');
+        this._context       = <CanvasRenderingContext2D>this._canvas.getContext('2d');
+        
+        this._buttonCanvas  = document.createElement('canvas');
+        this._buttonContext = <CanvasRenderingContext2D>this._buttonCanvas.getContext('2d');
+    }
+
+
+    protected draw (){
+
+    }
 }

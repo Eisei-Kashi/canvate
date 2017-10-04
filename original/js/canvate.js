@@ -1075,7 +1075,7 @@ window.Canvate = function(width, height, element, canvasDebugger) {
 		_canvas.onclick = function(event){
 			event.preventDefault();
 			var shape =  _buttonsList[_pixelColor];
-			if(Boolean(shape) && typeof(shape.onClick) != "undefined"){
+			if(Boolean(shape)){
 				shape.onClick(_lastX, _lastY);   
 			}
 		};
