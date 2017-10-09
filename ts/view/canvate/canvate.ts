@@ -199,6 +199,15 @@ export class Canvate {
         }
     }
 
+    // ::: GETTERS INTERFACE ::: //
+    public get canvas ():HTMLCanvasElement {
+        return this._canvas;
+    }
+
+    public get context ():CanvasRenderingContext2D{
+        return this._context
+    }
+
     //==============================================
 
     // ::: Initialization ::: //
@@ -322,7 +331,7 @@ export class Canvate {
         
     private onClick (event:MouseEvent){
         event.preventDefault();
-        var shape:Shape =  <Shape> this._buttonsList[this._pixelColor];
+        let shape:Shape =  <Shape> this._buttonsList[this._pixelColor];
         if( Boolean(shape) ){
             shape.doOnClick(this._lastX, this._lastY);
         }
@@ -330,7 +339,7 @@ export class Canvate {
         
     private onMouseDown (event:MouseEvent){
         event.preventDefault();
-        var shape:Shape =  <Shape> this._buttonsList[this._pixelColor];
+        let shape:Shape =  <Shape> this._buttonsList[this._pixelColor];
         if( Boolean(shape) ){
             this._wasShapeDown = true;
             this._lastShapeDown = shape;
@@ -374,7 +383,7 @@ export class Canvate {
         let pixelColor  = this._pixelColor    = "#" + ("000000" + hex).slice(-6);
         
         let shape:Shape =  this._buttonsList[this._pixelColor];
-        var mouseCursor = "default";
+        let mouseCursor = "default";
         
         if(Boolean(shape)){
             if(shape.hasButtonListener){

@@ -39,9 +39,9 @@ export class Shape extends Box implements IDispatcher{
 
     protected _crop:Box;
 
-    constructor(x?:number=0, y?:number=0, width?:number=0, height?:number=0){
+    constructor(x:number=0, y:number=0, width:number=0, height:number=0, crop?:Box){
         super(x, y, width, height);
-        this._crop = new Box(x, y, width, height);
+        this._crop = undefined == crop ? new Box(x, y, width, height) : crop;
     }
 
     // id

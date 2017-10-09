@@ -1,4 +1,7 @@
 export class AppEvent extends Event{
+    public static COMPLETE:string = "complete";
+    public static ERROR:string = "error";
+
     private _type:string;
     private _data:any;
 
