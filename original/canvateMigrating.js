@@ -1,30 +1,6 @@
 window.imagesLoaded = [];
 
 window.Canvate = function(width, height, element, canvasDebugger) {
-	
-	// ::: SHAPES HELPERS ::: //
-    
-    function convertImageToCanvas(image, shape){
-        setImageArguments(shape, image.width, image.height);
-        var crop       = shape.crop;
-        var clipX      = crop.x;
-        var clipY      = crop.y;
-        var clipWidth  = crop.width;
-        var clipHeigth = crop.height;
-        var x          = shape.x || 0;
-        var y          = shape.y || 0;
-        var width      = shape.width  || image.width;
-        var height     = shape.height || image.height;
-        
-        var imageCanvas        = document.createElement('canvas');
-            imageCanvas.width  = image.width;
-            imageCanvas.height = image.height;
-        var imageContext       = imageCanvas.getContext('2d');
-        imageContext.drawImage(image, 0,     0,     image.width,     image.height);
-        
-        shape.canvas  = imageCanvas;
-        shape.context = imageContext;
-    }
     
 	function _drawSecuence (secuence, button, originalWidth, originalHeight){
 		if(false == secuence.visible || secuence.isMask){
@@ -34,37 +10,6 @@ window.Canvate = function(width, height, element, canvasDebugger) {
 		
 		var params = secuence.getCanvasToRender();
 		renderCanvas.apply(null, params);
-	}
-	
-	this.captureCanvas = function (canvas, data, cropData){
-		data       = null == data     ? {} : data;
-		cropData   = null == cropData ? {} : cropData;
-		
-		var x      = data.x || 0;
-		var y      = data.y || 0;
-		var width  = canvas.width  || canvas.width;
-		var height = canvas.height || canvas.height;
-	   
-		var shape = {x:x, y:y, width:width, height:height, crop:cropData};
-		
-		setImageArguments(shape, width, height);
-		
-		var clipX      = cropData.x;
-		var clipY      = cropData.y;
-		var clipWidth  = cropData.width;
-		var clipHeigth = cropData.height;
-		var x          = shape.x || 0;
-		var y          = shape.y || 0;
-		var width      = shape.width  || width;
-		var height     = shape.height || height;
-		
-		shape.canvas  = canvas;
-		shape.context = canvas.getContext("2d");
-		
-		button    = setButtonCanvas(shape);
-		_addCommand(_drawCanvas,[shape, button, width, height]);
-		
-		return shape;
 	}
 	
 	// ::: SECUENCE ::: //
