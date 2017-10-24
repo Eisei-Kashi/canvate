@@ -1,16 +1,16 @@
-import { IDispatcher } from "./IDispatcher";
+import { IEmmiter } from "./IEmmiter";
 import { AppEvent }    from "./AppEvent";
 
 interface IKeyFunction {
     [key: string]:Function[];
 }
 
-export class Dispatcher implements IDispatcher{
+export class Emmiter implements IEmmiter{
 
-    private _target:IDispatcher;
+    private _target:IEmmiter;
     private _eventsListenerList:IKeyFunction = {};
 
-    constructor (target:IDispatcher){
+    constructor (target:IEmmiter){
         this._target = target;
     }
 
@@ -69,7 +69,7 @@ export class Dispatcher implements IDispatcher{
         return true;
     }
 
-    public dispatch (event:Event):void{
+    public emit (event:Event):void{
         var type = event.type;
         let listenerList:Function[] = <Function[]>this._eventsListenerList[type];
         if(null == listenerList){
@@ -84,7 +84,7 @@ export class Dispatcher implements IDispatcher{
         }
     }
 
-    public dispatchByType(type:string, data?:any):void {
+    public emitByType(type:string, data?:any):void {
         if(null == type){
             throw new Error("The type property must be different from 0");
         }
@@ -94,6 +94,6 @@ export class Dispatcher implements IDispatcher{
         }
 
         var event:AppEvent = new AppEvent(type, data);
-        dispatchEvent(event);
+        this.emit(event);
     }
 }

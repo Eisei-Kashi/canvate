@@ -63,7 +63,9 @@ export class CanvateImage extends Shape {
                 this._crop.height = this._image.height;
             }
         }
-        var eventToDispatch:AppEvent = new AppEvent(AppEvent.COMPLETE, this._image);
+        var eventToEmit:AppEvent = new AppEvent(AppEvent.COMPLETE, this._image);
+        this._emmiter.emit(eventToEmit);
+        
     }
 
     private onError (){

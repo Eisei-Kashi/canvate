@@ -1,22 +1,22 @@
 import { Box }              from "./Box";
 import { MOUSE_TYPES }      from "../../event/MOUSE_TYPES";
 import { CANVATE_MEDIATOR } from "../../event/Mediator";
-import { Dispatcher }       from "../../event/Dispatcher";
-import { IDispatcher }      from "../../event/IDispatcher";
+import { Emmiter }          from "../../event/Emmiter";
+import { IEmmiter }         from "../../event/IEmmiter";
 import { CanvateEvent }     from "../../event/CanvateEvent";
 
 export interface IStringShape {
     [key: string]: Shape;
 }
 
-export class Shape extends Box implements IDispatcher{
+export class Shape extends Box implements IEmmiter {
     protected _canvas:HTMLCanvasElement;
     protected _buttonCanvas:HTMLCanvasElement;
 
     protected _context:CanvasRenderingContext2D;
     protected _buttonContext:CanvasRenderingContext2D;
 
-    protected _dispatcher:Dispatcher;
+    protected _emmiter:Emmiter;
     
     protected _color:CanvasPattern|string = "black";
     
@@ -207,31 +207,32 @@ export class Shape extends Box implements IDispatcher{
 
     public doOnClick (mouseX:number, mouseY:number):void {
         var data:Object = {id:this.id, mouseX:mouseX, mouseY:mouseY};
-        this._dispatcher.dispatchByType(MOUSE_TYPES.CLICK, data);
+        this._emmiter.emitByType(MOUSE_TYPES.CLICK, data);
     }
 
     public doOnMouseDown (mouseX:number, mouseY:number):void {
         var data:Object = {id:this.id, mouseX:mouseX, mouseY:mouseY};
-        this._dispatcher.dispatchByType(MOUSE_TYPES.DOWN, data);
+        this._emmiter.emitByType(MOUSE_TYPES.DOWN, data);
     }
 
     public doOnMouseUp (mouseX:number, mouseY:number):void {
         var data:Object = {id:this.id, mouseX:mouseX, mouseY:mouseY};
-        this._dispatcher.dispatchByType(MOUSE_TYPES.UP, data);
+        this._emmiter.emitByType(MOUSE_TYPES.UP, data);
     }
 
     public doOnMouseOver (mouseX:number, mouseY:number):void {
         var data:Object = {id:this.id, mouseX:mouseX, mouseY:mouseY};
-        this._dispatcher.dispatchByType(MOUSE_TYPES.OVER, data);
+        this._emmiter.emitByType(MOUSE_TYPES.OVER, data);
     }
 
     public doOnMouseOut (mouseX:number, mouseY:number):void {
         var data:Object = {id:this.id, mouseX:mouseX, mouseY:mouseY};
-        this._dispatcher.dispatchByType(MOUSE_TYPES.OUT, data);
+        this._emmiter.emitByType(MOUSE_TYPES.OUT, data);
     }
     
     // ::: Render ::: //
     public renderOnTarget (context:CanvasRenderingContext2D, buttonContext:CanvasRenderingContext2D){
+        
         if(this._hasChanged){
             this.draw();
             this._hasChanged = false
@@ -285,9 +286,9 @@ export class Shape extends Box implements IDispatcher{
         buttonContext.restore();
     }
 
-    // ::: Interface Event dispatcher ::: //
+    // ::: Interface Event emmiter ::: //
     public addEventListener (type:string, listener:Function):Boolean {
-        let wasAdded:Boolean     = this._dispatcher.addEventListener(type, listener);
+        let wasAdded:Boolean     = this._emmiter.addEventListener(type, listener);
         let isMouseEvent:Boolean = null != MOUSE_TYPES[type];
         if(wasAdded && isMouseEvent){
             this._mouseEventCounter++;
@@ -304,8 +305,8 @@ export class Shape extends Box implements IDispatcher{
     }
 
     public removeEventListener (type:string, listener:Function):Boolean {
-        let wasRemoved:Boolean   = this._dispatcher.removeEventListener(type, listener);
-        let isMouseEvent:Boolean = null != mouseEventTypes[type];
+        let wasRemoved:Boolean   = this._emmiter.removeEventListener(type, listener);
+        let isMouseEvent:Boolean = null != MOUSE_TYPES[type];
         if(wasRemoved && isMouseEvent){
             this._mouseEventCounter--;
             
@@ -321,7 +322,7 @@ export class Shape extends Box implements IDispatcher{
     }
 
     protected initialize (){
-        this._dispatcher    = new Dispatcher(this);
+        this._emmiter       = new Emmiter(this);
         this._id            = ++idCounter;
         this._buttonColor   = "#" + ("000000" + this._id.toString(16).toUpperCase()).slice(-6);
 

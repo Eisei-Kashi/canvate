@@ -63,11 +63,17 @@ export class CanvateImage extends Shape {
                 this._crop.height = this._image.height;
             }
         }
-        var eventToDispatch:AppEvent = new AppEvent(AppEvent.COMPLETE, this._image);
+        let eventToEmit:AppEvent = new AppEvent(AppEvent.COMPLETE, this._image);
+        this._emmiter.emit(eventToEmit);
+
+        let urlEvent:AppEvent = new AppEvent(this._image.src, this._image);
+        this._emmiter.emit(urlEvent);
     }
 
     private onError (){
         console.error("Image can not be loaded.\n");
         console.error(this._url);
+        let eventToEmit:AppEvent = new AppEvent(AppEvent.ERROR, this._url);
+        this._emmiter.emit(eventToEmit);
     }
 }

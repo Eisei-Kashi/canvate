@@ -1,4 +1,4 @@
-import { Dispatcher }       from "../../event/Dispatcher";
+import { Emmiter }       from "../../event/Emmiter";
 import { MOUSE_TYPES }      from "../../event/MOUSE_TYPES";
 import { CANVATE_MEDIATOR } from "../../event/Mediator";
 import { CanvateEvent }     from "../../event/CanvateEvent";
@@ -45,7 +45,7 @@ export class Canvate {
     
     private _self:Canvate = this;
 
-    private _dispatcher:Dispatcher;
+    private _emmiter:Emmiter;
     
     private _pixelColor:any; //TODO
     private _buttonsList:any = {}; //TODO Vector
@@ -131,7 +131,7 @@ export class Canvate {
         }
 
         var event:CanvateEvent = new CanvateEvent(CanvateEvent.ADDED, child.id);
-        CANVATE_MEDIATOR.dispatchEvent(event);
+        CANVATE_MEDIATOR.emit(event);
         
         this._drawsList.push(child);
         return true;
